@@ -7,12 +7,12 @@ Mac OSX mobile accounts using ZFS snapshots
 * Snapshots are automatically thinned by ZFS-Timemachine.
 * On client, local ZFS oerations happen as root user.
 * Authentication on the server by SSH public key as user 'zfs_mobile_sync'.
-* Remote shell is restricted by rssh for ZFS use only.
+* Remote shell is restricted by lshell for ZFS use only.
 
 ## Dependencies
 
 * ZFS-TimeMachine (https://github.com/jollyjinx/ZFS-TimeMachine)
-* rssh with ZFS support (https://github.com/kaazoo/homebrew/blob/master/Library/Formula/rssh.rb)
+* lshell (https://github.com/ghantoos/lshell)
 
 ## Server setup
 
@@ -21,13 +21,33 @@ Mac OSX mobile accounts using ZFS snapshots
 <pre>
 zfs create -o canmount=off data/profiles
 </pre>
-* Add local user account 'login_sync' with 'rssh' as login shell.
-* Add option 'allowzfs' to rssh.conf.
+* Add local user account 'zfs_mobile_sync' with 'lshell' as login shell:
+<pre>
+useradd -m -s /usr/bin/lshell -g users -G lshell zfs_mobile_sync
+</pre>
+* Modify /etc/lshell.conf:
+<pre>
+...
+[default]
+allowed         : ['zfs']
+...
+env_path        : ':/usr/local/bin:/usr/sbin:/sbin'
+...
+scp             : 0
+...
+sftp            : 0
+...
+overssh         : ['zfs']
+...
+</pre>
 
 ## Client setup
 
 * Configure LDAP server for user authentication.
-* Shrink system partition or use separate disk.
+* Shrink system partition or use separate disk:
+<pre>
+diskutil cs resizeStack disk1 550g jhfs+ ZFS 200g
+</pre>
 * Install ZFS: https://openzfsonosx.org/
 * Create zpool 'data' and parent filesystem for user profiles:
 <pre>
@@ -50,8 +70,8 @@ git clone https://github.com/jollyjinx/ZFS-TimeMachine.git
 <pre>
 chmod +x /usr/local/bin/zfs_send_to_server.sh
 chmod +x /usr/local/bin/zfs_receive_from_server.sh
-sudo defaults write com.appleloginwindow LogoutHook /usr/local/bin/zfs_send_to_server.sh
-sudo defaults write com.appleloginwindow LoginHook /usr/local/bin/zfs_receive_from_server.sh
+sudo defaults write com.apple.loginwindow LogoutHook /usr/local/bin/zfs_send_to_server.sh
+sudo defaults write com.apple.loginwindow LoginHook /usr/local/bin/zfs_receive_from_server.sh
 </pre>
 * Become root user, create SSH public key and import hostkey of server:
 <pre>
