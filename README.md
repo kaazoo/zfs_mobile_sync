@@ -95,12 +95,13 @@ zfs allow zfs_mobile_sync create,destroy,snapshot,mount,send,receive data/profil
 </pre>
 * Create filesystem 'data/profiles/user123' with mountpoint '/Users/user123' on client and set ownership:
 <pre>
-zfs create -o mountpoint=/Users/user123 data/profiles/user123
+zfs create -o mountpoint=/Users/user123 -o com.apple.browse=off data/profiles/user123
 chown -R user123:staff /Users/user123
 </pre>
 * Log in as user on client.
 * Log out.
 * Check if ZFS snaphosts have been transfered to server.
+* See also logfiles /var/log/zfs_receive_from_server.log and /var/log/zfs_send_to_server.log
 
 
 ## Pros
